@@ -455,61 +455,61 @@ public class CassandraCQLClient extends DB {
    */
   @Override
   public Status update(String table, String key, Map<String, ByteIterator> values) {
-
-    try {
-      Set<String> fields = values.keySet();
-      PreparedStatement stmt = updateStmts.get(fields);
-
-      // Prepare statement on demand
-      if (stmt == null) {
-        Update updateStmt = QueryBuilder.update(table);
-
-        // Add fields
-        for (String field : fields) {
-          updateStmt.with(QueryBuilder.set(field, QueryBuilder.bindMarker()));
-        }
-
-        // Add key
-        updateStmt.where(QueryBuilder.eq(YCSB_KEY, QueryBuilder.bindMarker()));
-
-        stmt = session.prepare(updateStmt);
-        stmt.setConsistencyLevel(writeConsistencyLevel);
-        if (trace) {
-          stmt.enableTracing();
-        }
-
-        PreparedStatement prevStmt = updateStmts.putIfAbsent(new HashSet(fields), stmt);
-        if (prevStmt != null) {
-          stmt = prevStmt;
-        }
-      }
-
-      if (logger.isDebugEnabled()) {
-        logger.debug(stmt.getQueryString());
-        logger.debug("key = {}", key);
-        for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
-          logger.debug("{} = {}", entry.getKey(), entry.getValue());
-        }
-      }
-
-      // Add fields
-      ColumnDefinitions vars = stmt.getVariables();
-      BoundStatement boundStmt = stmt.bind();
-      for (int i = 0; i < vars.size() - 1; i++) {
-        boundStmt.setString(i, values.get(vars.getName(i)).toString());
-      }
-
-      // Add key
-      boundStmt.setString(vars.size() - 1, key);
-
-      session.execute(boundStmt);
-
-      return Status.OK;
-    } catch (Exception e) {
-      logger.error(MessageFormatter.format("Error updating key: {}", key).getMessage(), e);
-    }
-
-    return Status.ERROR;
+      return insert(table, key, values);
+//    try {
+//      Set<String> fields = values.keySet();
+//      PreparedStatement stmt = updateStmts.get(fields);
+//
+//      // Prepare statement on demand
+//      if (stmt == null) {
+//        Update updateStmt = QueryBuilder.update(table);
+//
+//        // Add fields
+//        for (String field : fields) {
+//          updateStmt.with(QueryBuilder.set(field, QueryBuilder.bindMarker()));
+//        }
+//
+//        // Add key
+//        updateStmt.where(QueryBuilder.eq(YCSB_KEY, QueryBuilder.bindMarker()));
+//
+//        stmt = session.prepare(updateStmt);
+//        stmt.setConsistencyLevel(writeConsistencyLevel);
+//        if (trace) {
+//          stmt.enableTracing();
+//        }
+//
+//        PreparedStatement prevStmt = updateStmts.putIfAbsent(new HashSet(fields), stmt);
+//        if (prevStmt != null) {
+//          stmt = prevStmt;
+//        }
+//      }
+//
+//      if (logger.isDebugEnabled()) {
+//        logger.debug(stmt.getQueryString());
+//        logger.debug("key = {}", key);
+//        for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
+//          logger.debug("{} = {}", entry.getKey(), entry.getValue());
+//        }
+//      }
+//
+//      // Add fields
+//      ColumnDefinitions vars = stmt.getVariables();
+//      BoundStatement boundStmt = stmt.bind();
+//      for (int i = 0; i < vars.size() - 1; i++) {
+//        boundStmt.setString(i, values.get(vars.getName(i)).toString());
+//      }
+//
+//      // Add key
+//      boundStmt.setString(vars.size() - 1, key);
+//
+//      session.execute(boundStmt);
+//
+//      return Status.OK;
+//    } catch (Exception e) {
+//      logger.error(MessageFormatter.format("Error updating key: {}", key).getMessage(), e);
+//    }
+//
+//    return Status.ERROR;
   }
 
   /**
